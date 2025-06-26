@@ -1,5 +1,11 @@
 /* Support selenized and solarized color themes together with ctheme.css. */
 
+/* Usage:
+ * const theme = new ThemeColors();
+ * // colors are now available as theme.bg_0, them.fg_0, theme.red, etc.
+ * // To change color theme:
+ * const html = document.documentElement;
+ */
 export default class ThemeColors {
     constructor() {
         this.colors = {}
@@ -14,6 +20,42 @@ export default class ThemeColors {
                          "violet", "magenta"]) {
             this.colors[c] = style.getPropertyValue("--" + c);
         }
+    }
+
+    /* Call this to change color theme, e.g.- change("solarized dark") */
+    change(to) {
+        const schemes = ["solarized", "selenized"];
+        const modes = ["light", "dark", "white", "black"];
+        let scheme, mode;
+        for (const v of to.split(/\s+/)) {
+            if (scheme === undefined && schemes.some(v => v==x)) {
+                scheme = v;
+            } else if (mode === undefined && modes.some(v => v==x)) {
+                mode = v;
+            } else {
+                scheme = mode = undefined;
+                break
+            }
+        }
+        if (scheme === undefined && mode === undefined) {
+            throw new Error("unrecognized color theme")
+        }
+        if (scheme == "solarized" && (mode == "white" | mode == "black")) {
+            throw new Error("solarized scheme has no white or black mode")
+        }
+        const clist = document.documentElement.classList;
+        if (scheme === undefined) {
+            if (clist.contains("solarized") && mode!="white" && mode!="black") {
+                scheme = "solarized";
+            } else {
+                scheme = "selenized";
+            }
+        } else if (mode === undefined) {
+            mode = "light";
+        }
+        clist.remove(...schemes, ...modes);
+        clist.add(scheme, mode);
+        this.update();
     }
 
     get bg_0() { return this.colors.bg_0; }

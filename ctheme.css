@@ -1,5 +1,9 @@
 /* ctheme.css
 
+   Usage:
+   <html class "selenized light" ...>
+     <link rel="stylesheet" href="ctheme.css">
+
    Defines selenized and solarized color themes which are set by classes on
    the html element.  Selenized was inspired by solarized; it feautures
    somewhat more distinguishable (contrasting) colors  at the expense of
