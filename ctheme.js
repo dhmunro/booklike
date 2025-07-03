@@ -1,12 +1,18 @@
-/* Support selenized and solarized color themes together with ctheme.css. */
-
-/* Usage:
+/* Companion module for ctheme.css to be used in javascript scripts.
+ * Supports selenized and solarized color themes.
+ *
+ * Usage:
+ ^
+ * import ThemeColors from "ctheme.js";
  * const theme = new ThemeColors();
- * // colors are now available as theme.bg_0, them.fg_0, theme.red, etc.
+ *   // colors are now available as theme.bg_0, theme.fg_0, theme.red, etc.
+ * 
  * // To change color theme:
  * const html = document.documentElement;
+ * theme.change("selenized dark");
+ *   // or "solarized light", "selenized white", etc.
  */
-export default class ThemeColors {
+class ThemeColors {
     constructor() {
         this.colors = {}
         this.update()
@@ -73,3 +79,5 @@ export default class ThemeColors {
     get violet() { return this.colors.violet; }
     get magenta() { return this.colors.magenta; }
 }
+
+export default ThemeColors;

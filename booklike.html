@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" class="selenized light">
+
+<head>
+  <title>Booklike HTML Template</title>
+  <meta name="description"
+    content="Template for using booklike.js/css and ctheme.css frameworks."/>
+  <meta charset="utf-8"/>
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <!-- src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js" -->
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.9.1/dist/pixi.min.js" integrity="sha384-yDBakdoFK/38OzWsBSrn4PfeusMXoYyVmepxgxiGH5FKBxHQvfG88nZjhhgiIfPs" crossorigin="anonymous"></script>
+  <!-- https://cdnjs.com/libraries/font-awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="ctheme.css"/>
+  <link rel="stylesheet" href="booklike.css"/>
+</head>
+
+<!-- --------------------------------------------------------------------- -->
+<body>
+  <div class="page-holder">
+    <!-- Book pages go here in order - page 0, 1, 2, 3, etc.
+      Each page goes in a div with class "page".  A few additional classes
+      are defined in booklike.css:
+        title  - the title page for the book (always page 0)
+        figure - a full page figure, hopefully described on the facing page
+
+      The pages are displayed in pairs, an even page on the left (or top) and
+      the following odd page on the right (or bottom).  Turning the page
+      advances to the next or previous pair.
+
+      Figures drawn with pixi.js or three.js should not be on facing pages
+      (an even-odd page pair) because they can drive only a very small number
+      of HTML canvases portably (booklike assumes at least two).
+    -->
+    <div class="title page">
+      <h1>Booklike Web Pages</h1>
+      <h2>A CSS-javascript framework for turning pages</h2>
+      <p class="author">by David Munro</p>
+    </div>
+    <div class="page">
+      <h2>Introduction - page 1</h2>
+      <p>First paragraph of actual content.  I can't remember Lorem Ipsum
+        or it would go here.  Just stream some consciousness instead.</p>
+    </div>
+    <div class="page">
+      <h2>First section - page 2</h2>
+      <p>More content, which really ought to be a complete paragraph.  However,
+        I have nothing to say, so some incoherent rambling will have to
+        suffice for now, won't it?</p>
+    </div>
+    <div class="figure page">Pseudo figure - page 3.</div>
+    <div class="page">
+      <h2>Second section - page 4</h2>
+      <p>More content, which really ought to be a complete paragraph.  However,
+        I have nothing to say, so some incoherent rambling will have to
+        suffice for now, won't it?</p>
+    </div>
+  </div>
+
+  <div class="even-page"><div class="page-wrap">
+    <!-- even pages (left or top) reparented here from non-current-pages -->
+    <div class="animation-control hidden">
+      <div class="play-pause">
+        <i class="fas fa-play fa-2x fa-fw"></i>
+      </div>
+      <div class="slider">
+        <div class="trough"></div><div class="thumb"></div>
+      </div>
+    </div>
+  </div></div>
+  <div class="odd-page"><div class="page-wrap">
+    <!-- odd pages (right or bottom) reparented here from non-current-pages -->
+    <div class="animation-control hidden">
+      <div class="play-pause">
+        <i class="fas fa-play fa-2x fa-fw"></i>
+      </div>
+      <div class="slider">
+        <div class="trough"></div><div class="thumb"></div>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- consider chevron-left or circle-left, bars or circle-info -->
+  <div id="pg-forward">
+    <i class="fas fa-circle-right fa-2x fa-fw"></i>
+  </div>
+  <div id="pg-backward">
+    <i class="fas fa-circle-left fa-2x fa-fw"></i>
+  </div>
+
+<!-- --------------------------------------------------------------------- -->
+
+<!-- Record current page pair here so refresh does not jump to beginning. -->
+<input type="hidden" name="currentPair" id="currentPair" value="0" />
+
+<!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com
+        License - https://fontawesome.com/license/free
+                  (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
+        Copyright 2023 Fonticons, Inc. -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="fa-play" viewBox="0 0 384 512">
+    <path
+      d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z" />
+  </symbol>
+  <symbol id="fa-pause" viewBox="0 0 320 512">
+    <path
+      d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z" />
+  </symbol>
+  <symbol id="fa-chevron-right" viewBox="0 0 320 512">
+    <path
+      d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z" />
+  </symbol>
+  <symbol id="fa-chevron-left" viewBox="0 0 320 512">
+    <path
+      d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/>
+  </symbol>
+  <symbol id="fa-chevron-up" viewBox="0 0 512 512">
+    <path
+      d="M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z"/>
+  </symbol>
+  <symbol id="fa-chevron-down" viewBox="0 0 512 512">
+    <path
+      d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/>
+  </symbol>
+  <symbol id="fa-bars" viewBox="0 0 448 512">
+    <path
+      d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z" />
+  <symbol id="fa-xmark" viewBox="0 0 384 512">
+    <path
+      d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
+  </symbol>
+  <symbol id="fa-compress" viewBox="0 0 448 512">
+    <path
+      d="M160 64c0-17.7-14.3-32-32-32s-32 14.3-32 32v64H32c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32V64zM32 320c-17.7 0-32 14.3-32 32s14.3 32 32 32H96v64c0 17.7 14.3 32 32 32s32-14.3 32-32V352c0-17.7-14.3-32-32-32H32zM352 64c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H352V64zM320 320c-17.7 0-32 14.3-32 32v96c0 17.7 14.3 32 32 32s32-14.3 32-32V384h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H320z" />
+  </symbol>
+  <symbol id="fa-expand" viewBox="0 0 448 512">
+    <path
+      d="M32 32C14.3 32 0 46.3 0 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V96h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H32zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H64V352zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32h64v64c0 17.7 14.3 32 32 32s32-14.3 32-32V64c0-17.7-14.3-32-32-32H320zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v64H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32V352z" />
+  </symbol>
+  <symbol id="fa-circle-info" viewBox="0 0 512 512">
+    <path
+      d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
+  </symbol>
+  <symbol id="fa-circle-xmark" viewBox="0 0 512 512">
+    <path
+      d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z" />
+  </symbol>
+  <symbol id="fa-arrow-rotate-left" viewBox="0 0 512 512">
+    <path
+      d="M125.7 160H176c17.7 0 32 14.3 32 32s-14.3 32-32 32H48c-17.7 0-32-14.3-32-32V64c0-17.7 14.3-32 32-32s32 14.3 32 32v51.2L97.6 97.6c87.5-87.5 229.3-87.5 316.8 0s87.5 229.3 0 316.8s-229.3 87.5-316.8 0c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0c62.5 62.5 163.8 62.5 226.3 0s62.5-163.8 0-226.3s-163.8-62.5-226.3 0L125.7 160z" />
+  </symbol>
+  </symbol>
+  <symbol id="fa-plus" viewBox="0 0 448 512">
+    <path
+      d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z" />
+  </symbol>
+</svg>
+
+<!-- --------------------------------------------------------------------- -->
+
+<script type="module" src="./booklike.js"></script>
+</body>
+</html>

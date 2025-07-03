@@ -1,0 +1,262 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+body {
+  display: grid;
+    --orientation: landscape;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  grid-gap: 0.0rem;
+  box-sizing: border-box;
+  margin: 0;
+  font-family: 'Merriweather', serif;
+  /* Without a specified height, % units in children are meaningless.
+           * Use min-height so body can grow larger - without it, scrolling
+           * may break;
+          min-height: 100vh;
+           */
+  height: 100vh;
+  overflow: hidden;
+  scrollbar-color: var(--dim_0) var(--bg_2);
+}
+p {
+  text-align: justify;
+}
+h1,
+h2 {
+  text-align: center;
+}
+.hidden {
+  display: none !important;
+}
+.infront {
+  z-index: 1;
+}
+.easein { /* cubic-bezier(0.42, 0, 1, 1) */
+  transition-timing-function: ease-in;
+}
+.easeout { /* cubic-bezier(0, 0, 0.58, 1) */
+  transition-timing-function: ease-out;
+}
+.unselectable {
+  -webkit-user-select: none;
+  /* Safari */
+  -ms-user-select: none;
+  /* IE 10 and IE 11 */
+  user-select: none;
+  /* Standard syntax */
+}
+.centered {
+  text-align: center;
+}
+.highlighted {
+  background: var(--bg_1);
+  color: var(--fg1);
+}
+
+.page-holder {
+  display: none !important;
+}
+.title.page h1 {
+  margin-top: 7rem;
+}
+.title.page .author {
+  font-style: italic;
+  text-align: center;
+}
+
+.even-page, .odd-page {
+  justify-self: stretch;
+  min-width: 22rem;
+  /* max-width: 44rem; */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.even-page {
+  border-right: 1px solid;
+}
+.page-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.page {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: var(--bg_0);
+  transform: rotate(0deg);
+  transition-property: transform;
+  transition-duration: 0.5s;
+  transition-timing-function: linear;
+}
+.even-page .page {
+  transform-origin: bottom right;
+}
+.odd-page .page {
+  transform-origin: top left;
+}
+.page p,
+.page h1,
+.page h2,
+.page h3 {
+  max-width: 44rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+.even-page .page p,
+.even-page .page h1,
+.even-page .page h2,
+.even-page .page h3 {
+  margin-left: auto;
+}
+.odd-page .page p,
+.odd-page .page h1,
+.odd-page .page h2,
+.odd-page .page h3 {
+  margin-right: auto;
+}
+.midturn {
+  transform: rotateY(89.9deg) !important;
+}
+
+#figure-box {
+  min-width: 22rem;
+  width: 100%;
+  height: 100%;
+  justify-self: stretch;
+  /* without this, scrollbar causes infinite loop of resize events */
+  position: relative;
+  overflow: hidden;
+}
+#figure-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 44rem;
+  margin-right: auto;
+}
+.fig {
+  position: absolute;
+  background: var(--bg_0);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.animation-control {
+  position: absolute;
+  padding-top: 0.5rem;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 68%;
+  max-width: 25rem;
+}
+.play-pause {
+  display: block;
+  float: left;
+  width: 2.5rem;  /* extra 0.5 for fa-fw fixed width glyphs */
+  height: 2rem;
+  margin-right: 0.7rem;
+  cursor: pointer;
+  color: var(--dim_0);
+}
+.play-pause:hover {
+  color: var(--fg_1);
+}
+.thumb {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  margin-top: 0.2rem;
+  height: 1.6rem;
+  width: 1.6rem;
+  border-radius: 0.8rem;
+  background: var(--dim_0);
+  cursor: pointer;
+}
+.thumb:hover {
+  background: var(--fg_1);
+}
+.slider {
+  position: relative;
+  display: inline-block;
+  width: calc(100% - 3.2rem);
+  height: 2rem;
+}
+.trough {
+  margin-top: 0.75rem;
+  height: 0.5rem;
+  border-radius: 0.25rem;
+  background: var(--bg_2);
+}
+
+#pg-backward, #pg-forward {
+  display: grid;
+  grid: 1fr / 1fr;
+  color: var(--dim_0);
+}
+#pg-backward:hover, #pg-forward:hover {
+  color: var(--fg_1);
+}
+#pg-backward {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+#pg-forward {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+#pg-forward i, #pg-backward i {
+  padding: 0.5rem;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  body {
+    --orientation: portrait;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .even-page, .odd-page {
+    align-self: stretch;
+  }
+  .even-page {
+    border-right: none;
+    border-bottom: 1px solid;
+  }
+  .midturn {
+    transform: rotateX(89.9deg) !important;
+  }
+
+  .page p,
+  .page h1,
+  .page h2,
+  .page h3 {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #figure-box {
+    justify-self: center;
+    align-self: start;
+  }
+  #figure-wrap {
+    margin-left: auto;
+  }
+
+  #pg-forward {
+    top: unset;
+    right: unset;
+    bottom: 0;
+    left: 0;
+  }
+}
+@media screen and (max-width: 720px) {
+  :root {
+    font-size: 12px;
+  }
+}
