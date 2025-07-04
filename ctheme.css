@@ -128,7 +128,8 @@
     syntax: "<color>"; inherits: true; initial-value: #002b36;
  }
 
-.selenized.light {  /* default */
+ /* default theme is selenized, so no explicit selenized class required */
+.light {  /* default */
     --bg_0: #fbf3da; --bg_1: #ede5cc; --bg_2: #d4cbb4;
     --dim_0: #8f9894; --fg_0: #54666d; --fg_1: #3a4c52;
     --red: #d0202c; --orange: #c35d20; --yellow: #ad8900;
@@ -150,7 +151,7 @@
     --fg_x: #073642; --fg_y: #002b36;
 }
 
-.selenized.dark {
+.dark {
     --bg_0: #103c48; --bg_1: #194856; --bg_2: #2e5b69;
     --dim_0: #738b90; --fg_0: #adbcbc; --fg_1: #c9d7d8;
     --red: #f9554f; --orange: #ee8649; --yellow: #dbb32d;
@@ -172,7 +173,7 @@
     --fg_x: #eee8d5; --fg_y: #fdf6e3;
 }
 
-.selenized.white {
+.white {
     --bg_0: #ffffff; --bg_1: #ebebeb; --bg_2: #cccccc;
     --dim_0: #868686; --fg_0: #474747; --fg_1: #282828;
     --red: #d7000c; --orange: #d14b00; --yellow: #c39700;
@@ -184,7 +185,7 @@
     --br_violet: #6b3fc2; --br_magenta: #c7008b;
 }
 
-.selenized.black {
+.black {
     --bg_0: #181818; --bg_1: #262626; --bg_2: #3b3b3b;
     --dim_0: #777777; --fg_0: #b9b9b9; --fg_1: #dddddd;
     --red: #ec4946; --orange: #e57f42; --yellow: #dbb32d;

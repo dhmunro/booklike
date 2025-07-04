@@ -13,6 +13,7 @@ const theme = new ThemeColors()
 
 class PageManager {
   constructor() {
+    this.rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
     this.landscape = getComputedStyle(
       document.body).getPropertyValue("--orientation") == "landscape";
     this.holder = document.querySelector(".page-holder");
@@ -31,6 +32,7 @@ class PageManager {
     this.cur = document.getElementById("currentPair");
     this.frwd = document.getElementById("pg-forward");
     this.bkwd = document.getElementById("pg-backward");
+    this.pgctl = document.getElementById("pg-control");
     this.pagerIcons = this.landscape? ["right", "left"] : ["down", "up"];
     this.pagerIcons = this.pagerIcons.map(t => "fa-circle-" + t);
     this.checkPagers();
@@ -90,6 +92,8 @@ class PageManager {
       }
     });
     this.observe_resize(document.body, (w, h) => {
+      this.rem = parseFloat(
+        getComputedStyle(document.documentElement).fontSize);
       this.landscape = getComputedStyle(
           document.body).getPropertyValue("--orientation") == "landscape";
       this.pagerIcons = this.landscape? ["right", "left"] : ["down", "up"];
@@ -99,12 +103,12 @@ class PageManager {
     /* Pulse info button if starting on page 0. */
     this.beating = false;
     if (this.current == 0) {
-      this.bkwd.children[0].classList.add("fa-beat");
+      this.bkwd.children[0].classList.add("fa-bounce");
       this.beating = true;
       setTimeout(() => {
-        this.bkwd.children[0].classList.remove("fa-beat");
+        this.bkwd.children[0].classList.remove("fa-bounce");
         this.beating = false;
-      }, 5000);
+      }, 7000);
     }
   }
 
@@ -202,7 +206,7 @@ class PageManager {
   checkPagers(p, supress=false) {
     if (p === undefined) p = this.current;
     if (!supress && this.beating) {
-        this.bkwd.children[0].classList.remove("fa-beat");
+        this.bkwd.children[0].classList.remove("fa-bounce");
         this.beating = false;
     }
     const maxp = this.pairs.length - 1;
@@ -219,7 +223,7 @@ class PageManager {
 
   showInfo() {
     if (this.beating) {
-      this.bkwd.children[0].classList.remove("fa-beat");
+      this.bkwd.children[0].classList.remove("fa-bounce");
       this.beating = false;
     }
     console.log("showInfo()");

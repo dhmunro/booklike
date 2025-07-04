@@ -149,10 +149,11 @@ h2 {
   position: absolute;
   padding-top: 0.5rem;
   top: 0;
-  left: 50%;
-  transform: translate(-50%, 0);
-  width: 68%;
-  max-width: 25rem;
+  left: 50%;  /* 50% of parent */
+  transform: translate(-50%, 0);  /* 50% of this element */
+  width: 72%;
+  max-width: 40rem;
+  --frac: 0.5;
 }
 .play-pause {
   display: block;
@@ -166,10 +167,16 @@ h2 {
 .play-pause:hover {
   color: var(--fg_1);
 }
+.slider {
+  position: relative;
+  display: inline-block;
+  width: calc(100% - 3.2rem);  /* play-pause is 2.5 + 0.7 wide */
+  height: 2rem;
+}
 .thumb {
   position: absolute;
   top: 0px;
-  left: 0px;
+  left: calc((100% - 1.6rem) * var(--frac));
   margin-top: 0.2rem;
   height: 1.6rem;
   width: 1.6rem;
@@ -179,12 +186,6 @@ h2 {
 }
 .thumb:hover {
   background: var(--fg_1);
-}
-.slider {
-  position: relative;
-  display: inline-block;
-  width: calc(100% - 3.2rem);
-  height: 2rem;
 }
 .trough {
   margin-top: 0.75rem;
@@ -213,6 +214,38 @@ h2 {
 }
 #pg-forward i, #pg-backward i {
   padding: 0.5rem;
+}
+
+#pg-control {
+  position: absolute;
+  width: 4rem;
+  height: 75%;
+  left: calc(50% - 2rem);
+  top: 50%;  /* 50% of bady */
+  transform: translate(0, -50%);  /* 50% of this element */
+  border-radius: 1rem;
+  --frac: 0.5;
+}
+.pg-trough {
+  margin-top: 0.75rem;
+  margin-left: 1.65rem;
+  width: 0.7rem;
+  height: calc(100% - 1.5rem);
+  border-radius: 0.25rem;
+  background: var(--bg_2);
+}
+.pg-thumb {
+  position: absolute;
+  top: calc((100% - 2.5rem) * var(--frac) + 0.75rem);
+  left: calc(50% - 1rem);
+  height: 1rem;
+  width: 2rem;
+  border-radius: 0.5rem;
+  background: var(--dim_0);
+  cursor: pointer;
+}
+.pg-thumb:hover {
+  background: var(--fg_1);
 }
 
 @media (max-aspect-ratio: 1/1) {
@@ -253,6 +286,25 @@ h2 {
     right: unset;
     bottom: 0;
     left: 0;
+  }
+  #pg-control {
+    width: 75%;
+    height: 4rem;
+    top: calc(50% - 2rem);
+    left: 50%;  /* 50% of bady */
+    transform: translate(-50%, 0);  /* 50% of this element */
+  }
+  .pg-trough {
+    margin-left: 0.75rem;
+    margin-top: 1.65rem;
+    height: 0.7rem;
+    width: calc(100% - 1.5rem);
+  }
+  .pg-thumb {
+    left: calc((100% - 2.5rem) * var(--frac) + 0.75rem);
+    top: calc(50% - 1rem);
+    height: 2rem;
+    width: 1rem;
   }
 }
 @media screen and (max-width: 720px) {
