@@ -32,7 +32,6 @@ class PageManager {
     this.cur = document.getElementById("currentPair");
     this.frwd = document.getElementById("pg-forward");
     this.bkwd = document.getElementById("pg-backward");
-    this.pgctl = document.getElementById("pg-control");
     this.pagerIcons = this.landscape? ["right", "left"] : ["down", "up"];
     this.pagerIcons = this.pagerIcons.map(t => "fa-circle-" + t);
     this.checkPagers();
@@ -51,8 +50,12 @@ class PageManager {
       }
       return dms;
     })("transition-duration");
-    this.frwd.addEventListener("click", e => this.change(1));
-    this.bkwd.addEventListener("click", e => this.change(-1));
+    this.pagerCancel = this.pagerCancel.bind(this);
+    this.pagerTrigger = this.pagerTrigger.bind(this);
+    this.frwd.addEventListener("pointerdown",
+      () => this.pagerStart(this.frwd, 1));
+    this.bkwd.addEventListener("pointerdown",
+      () => this.pagerStart(this.bkwd, -1));
     window.addEventListener("keydown", e => {
       switch (e.key) {
       case "Home":
@@ -99,6 +102,7 @@ class PageManager {
       this.pagerIcons = this.landscape? ["right", "left"] : ["down", "up"];
       this.pagerIcons = this.pagerIcons.map(t => "fa-circle-" + t);
       this.checkPagers(this.current, this.beating);
+      this.pgctl.onResize();
     });
     /* Pulse info button if starting on page 0. */
     this.beating = false;
@@ -131,6 +135,45 @@ class PageManager {
     element._resize_callback_ = undefined;
   }
 
+  pagerStart(el, delta) {
+    const nxt = this.current + delta;
+    if (nxt >= 0 && nxt < this.pairs.length) {  // this is arrow button
+      if (this._pager_info_ !== undefined) return;
+      const timeout = setTimeout(() => {
+        if (this._pager_info_ === undefined) return;
+        this._pager_info_[0] = null;
+        this.pgctl.activate();  // show page slider
+      }, 1000);
+      this._pager_info_ = [timeout, el, delta];
+    }
+    el.addEventListener("pointerup", this.pagerTrigger);
+    el.addEventListener("pointerout", this.pagerCancel);
+  }
+
+  pagerCancel() {
+    if (this._pager_info_ === undefined) return;
+    let [timeout, el] = this._pager_info_;
+    this._pager_info_ = undefined;
+    el.removeEventListener("pointerup", this.pagerTrigger);
+    el.removeEventListener("pointerout", this.pagerCancel);
+    if (timeout) clearTimeout(timeout);
+  }
+
+  pagerTrigger() {
+    if (this._pager_info_ === undefined) {
+      this.showInfo();
+      return;
+    }
+    let [timeout, el, delta] = this._pager_info_;
+    this._pager_info_ = undefined;
+    el.removeEventListener("pointerup", this.pagerTrigger);
+    el.removeEventListener("pointerout", this.pagerCancel);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.change(delta);
+    }
+  }
+
   change(delta) {
     this.goTo(this.current + delta);
   }
@@ -138,11 +181,8 @@ class PageManager {
   goTo(p, noTransition=false) {
     const [cur, nxt, maxp] = [this.current, p, this.pairs.length-1];
     if (nxt == cur) return;
-    if (nxt < 0) {
+    if (nxt < 0 || nxt > maxp) {
       if (cur == 0) this.showInfo();
-      return;
-    } else if (nxt > maxp) {
-      if (cur == maxp) this.showInfo();
       return;
     }
     for (let el of this.anim) {
@@ -230,5 +270,112 @@ class PageManager {
   }
 }
 
+class SimpleSlider {
+  constructor(control, thumb, margin, callback, context) {
+    this.control = control;
+    this.thumb = thumb;
+    this.parent = thumb.parentElement
+    this.margin = margin;  // in rem
+    this.moveThumb((manager.current + 0.5) / manager.pairs.length);
+    this.callback = callback;
+    this.ctx = context;  // if callback bound to a this, context is ignored
+    this.moving = false;
+    this.onResize();
+    this.onDown = this.onDown.bind(this);
+    this.onMove = this.onMove.bind(this);
+    this.onUp = this.onUp.bind(this);
+    this.thumb.addEventListener("pointerdown", this.onDown);
+  }
+
+  onResize() {
+    const classList = this.control.classList;
+    classList.remove("hidden");
+    let {top, bottom, right, left} = this.thumb.getBoundingClientRect();
+    let dthumb = [right - left, bottom - top];
+    ({top, bottom, right, left} = this.parent.getBoundingClientRect());
+    classList.add("hidden");
+    if (this.moving) this.onUp();
+    const width = right - left, height = bottom - top;
+    const vertical = height > width, margin = this.margin*manager.rem;
+    this.vertical = vertical;
+    if (vertical) {
+      this.full = height - 2*margin - dthumb[1];
+      this.zero = top + margin;
+    } else {
+      this.full = width - 2*margin - dthumb[0];
+      this.zero = left + margin;
+    }
+    this.offset = 0;  // difference between thumb position and pointer
+  }
+
+  getFrac(x, y) {
+    if (y === undefined) {
+      ({clientX: x, clientY: y} = x);  // single argument is an event
+    }
+    let frac = ((this.vertical? y : x) + this.offset - this.zero) / this.full;
+    if (frac < 0.) frac = 0.;
+    else if (frac > 1.) frac = 1.;
+    return frac;
+  }
+
+  moveThumb(frac) {
+    if (frac < 0.) frac = 0.;
+    else if (frac > 1.) frac = 1.;
+    this.control.style.setProperty("--frac", "" + frac);
+    if (this.callback) this.callback.call(this.ctx, frac);
+  }
+
+  activate() {
+    this.moveThumb((manager.current + 0.5) / manager.pairs.length);
+    this.control.classList.remove("hidden");
+  }
+
+  onDown(e) {
+    if (this.moving) return;
+    const {clientX, clientY} = e;
+    const ptr = this.vertical? clientY : clientX;
+    const frac = getComputedStyle(this.control).getPropertyValue("--frac");
+    const now = frac*this.full + this.zero;
+    this.offset = now - ptr;  // add to event position to get thumb position
+    const thumb = this.thumb;
+    thumb.addEventListener("pointermove", this.onMove);
+    thumb.addEventListener("pointerup", this.onUp);
+    thumb.addEventListener("pointercancel", this.onUp);
+    thumb.setPointerCapture(e.pointerId);
+    this.pointerId = e.pointerId;
+    this.moving = true;
+  }
+
+  onMove(e) {
+    if (!this.moving) return;
+    this.moveThumb(this.getFrac(e));
+  }
+
+  onUp(e) {
+    if (!this.moving) return;
+    if (e !== undefined) this.moveThumb(this.getFrac(e));
+    const thumb = this.thumb;
+    thumb.removeEventListener("pointermove", this.onMove);
+    thumb.removeEventListener("pointerup", this.onUp);
+    thumb.removeEventListener("pointercancel", this.onUp);
+    thumb.releasePointerCapture(this.pointerId);
+    this.pointerId = undefined;
+    this.moving = false;
+    this.control.classList.add("hidden");
+  }
+}
+
 const manager = new PageManager();
+{
+  const ctl = document.getElementById("pg-control");
+  manager.pgctl = new SimpleSlider(ctl, ctl.lastElementChild, 0.75, (frac) => {
+    const len = manager.pairs.length;
+    let p = parseInt(frac * len);
+    if (p < 0) p = 0;
+    else if (p >= len) p = len - 1;
+    manager.goTo(p, true);
+  });
+  manager.pgctl.moveThumb((manager.current + 0.5) / manager.pairs.length);
+}
+
 window.manager = manager;
