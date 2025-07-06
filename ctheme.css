@@ -12,7 +12,6 @@
 
    Solarized: https://ethanschoonover.com/solarized/
    Selenized: https://github.com/jan-warchol/selenized
-   Tinted-theming: https://github.com/tinted-theming
 
    Here we mostly use selenized color names: bg_0  bg_1  bg_2  dim_0  fg_0 
    and fg_1 for base colors (which are nearly monochrome) and red  orange 
@@ -45,6 +44,50 @@
 
    Note that for colorblind people with protanomaly or deuteranomaly (common
    types)  only the blue and yellow accent colors are easily distinguishable.
+ */
+
+/* https://github.com/tinted-theming
+   A huge collection of "base16" and "base24" palettes is available at the
+   tinted-theming site.  The color names used in Solarized and Selenized
+   are the same except violet -> purple and magenta -> brown.
+   The functional name correspondence is:
+
+   here         tinted (base16)
+   -----        ------
+   bg_0         base00
+   bg_1         base01
+   bg_2         base02
+   dim_0        base03
+   fg_0         base04
+   fg_1         base05
+   fg_x         base06 (brighter foreground)
+   fg_y         base07 (brightest foreground)
+   red          base08
+   orange       base09
+   yellow       base0a
+   green        base0b
+   cyan         base0c
+   blue         base0d
+   magenta      base0e (sometimes called purple)
+   violet       base0f (brown, sometimes dark red)
+
+   Note that in terms of recommended usages, selection background is bg_1
+   here, but base02 in tinted, while both default and selected foreground in
+   tinted are base05, the selected background fg_1 here.  In other words,
+   the usage to color correspondance is not quite clear.
+
+   The base24 schemes add these (missing br_orange and br_violet):
+
+                base10 (deeper background)
+                base11 (deepest background)
+   br_red       base12
+   br_yellow    base13
+   br_green     base14
+   br_cyan      base15
+   br_blue      base16
+   br_magenta   base17
+
+   The deep backgrounds 10 and 11 have no equivalents here.
  */
 
  /* Make selenized light the initial values for the color use names. */
@@ -200,12 +243,12 @@
 /* Here are some very basic default color definitions: */
 
 :root {
-    background: var(--bg_0);
-    color: var(--fg_0);
+   background: var(--bg_0);
+   color: var(--fg_0);
 }
 ::selection {
-    background: var(--bg_1);
-    color: var(--fg_1);
+   background: var(--bg_1);
+   color: var(--fg_1);
 }
 a {
   outline-color: var(--dim_0);
