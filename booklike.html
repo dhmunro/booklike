@@ -38,15 +38,34 @@
   <p class="author">by David Munro</p>
 </div>
 <div class="page">
-  <h2>Introduction - page 1</h2>
-  <p>First paragraph of actual content.  I can't remember Lorem Ipsum
-    or it would go here.  Just stream some consciousness instead.</p>
+  <h2>Introduction</h2>
+  <p>Booklike is a simple CSS/Javascript framework to create web pages that
+    read like a book.  In a landscape window, two pages are displayed side by
+    side like an open book.  In a portrait window, two pages are displayed one
+    above the other like an open calendar.  The muted 
+    <a href="https://github.com/jan-warchol/selenized">Selenized color themes</a>
+    reduce eyestrain: Light mode is the default, but dark mode or the higher
+    contrast white and black modes may be selected (or made the default).
+  </p>
+  <p>Controls are deliberately minimal and unobtrusive: Clicking on the arrow
+    buttons in the corners turns the pages forward or backward.  Or press and
+    hold an arrow to make a slider appear with which you can rapidly scan
+    through pages.  From the keyboard, PgDn or Enter pages forward, PgUp or
+    Backspace pages backward, and Home or End jumps to the first or last page.
+  </p>
 </div>
 <div class="page">
-  <h2>First section - page 2</h2>
-  <p>More content, which really ought to be a complete paragraph.  However,
-    I have nothing to say, so some incoherent rambling will have to
-    suffice for now, won't it?</p>
+  <h2>HTML source</h2>
+  <p>This file, booklike.html is a template.  The idea is to copy the files
+    booklike.{html, css, js} files and the ctheme.{css, js} files to your own
+    working folder.  Then you simply edit booklike.html, replacing each "page"
+    div in the "page-holder" div with the HTML content you want on each page.
+  </p>
+  <p>Because the .js files are ECMA 6 modules, you will need to run a local http
+    server (e.g.- run "python -m http.server" in your working folder) and
+    connect to the localhost URL it creates to display your booklike pages in
+    a local browser while you work on them.
+  </p>
 </div>
 <div class="figure page">Pseudo figure - page 3.</div>
 <div class="page">
