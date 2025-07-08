@@ -140,8 +140,8 @@ class PageManager {
       this.pagerIcons = this.pagerIcons.map(t => "fa-circle-" + t);
       this.checkPagers(this.current, this.beating);
       this.pgctl.onResize(rem);
-      this.anim[0].slider.onResize(rem);
-      this.anim[1].slider.onResize(rem);
+      this.anim[0].onResize(rem);
+      this.anim[1].onResize(rem);
     });
     /* Pulse info button if starting on page 0. */
     this.beating = false;
@@ -533,6 +533,14 @@ class AnimationControl {
     setTimeout(() => {
       classList.add("fade");
     }, 20);
+  }
+
+  onResize(rem) {
+    const classList = this.control.parentElement.firstElementChild.classList;
+    const notAnim = !classList.contains("animation");
+    if (notAnim) classList.add("animation");
+    this.slider.onResize(rem);
+    if (notAnim) classList.remove("animation");
   }
 }
 
