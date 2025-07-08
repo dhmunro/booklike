@@ -121,6 +121,7 @@ h2 {
 }
 
 .animation-control {
+  display: none;
   position: absolute;
   padding-bottom: 0.3rem;
   padding-top: 0.3rem;
@@ -131,14 +132,20 @@ h2 {
   transform: translate(-50%, 0);  /* 50% of this element */
   width: 72%;
   max-width: 40rem;
-  --frac: 0.5;
-  transition: bottom 0.5s;
+  --frac: 0;
+  opacity: 1;
+  transition: opacity 0s;
 }
-.animation-control.retract {
-  bottom: -2rem;
+.animation.page + .animation-control {
+  display: block;
+}
+.animation-control.fade {
+  opacity: 0.1;
+  transition: opacity 1s;
 }
 .animation-control:hover {
-  bottom: 0;
+  opacity: 1;
+  transition: opacity 0s;
 }
 .play-pause {
   display: block;

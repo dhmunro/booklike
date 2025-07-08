@@ -20,7 +20,7 @@
    RGB primaries and CYM secondaries.)
 
    Ordinary text has foreground and background colors fg_0/bg_0  while
-   selected text has fg_1/bg_1  which is roughly the asme contrast  so
+   selected text has fg_1/bg_1  which is roughly the same contrast  so
    it is just as easy to read.
 
    Selenized also defines "bright" variants of the accent colors  with names
@@ -43,7 +43,7 @@
    and unvisited links are supplied below.
 
    Note that for colorblind people with protanomaly or deuteranomaly (common
-   types)  only the blue and yellow accent colors are easily distinguishable.
+   types) only the blue and yellow accent colors are easily distinguishable.
  */
 
 /* https://github.com/tinted-theming
@@ -258,6 +258,9 @@ a:link {
 }
 a:visited {
   color: var(--dim_0);
+}
+a:visited::selection {
+  color: var(--fg_0);
 }
 a:focus  a:hover {
   text-decoration: none;

@@ -67,7 +67,25 @@
     a local browser while you work on them.
   </p>
 </div>
-<div class="figure page">Pseudo figure - page 3.</div>
+<div class="animation page">
+  <h2>Animation support</h2>
+  <p>By giving a "page" div an additional "animation" class, you can activate
+    a simple animation control on that page, as shown at the bottom of this
+    page &mdash; even though there is nothing to animate in this content!
+    To use this feature, you must supply your own javascript module which
+    connects to this animation control on any pages you animate.
+  </p>
+  <p>You can click on the play/pause button to start/stop the animation.
+    Hitting the Spacebar key also toggles start/stop.  If the animation has
+    reached the end, clicking the button or hitting spacebar will reset the
+    animation to the beginning.  You can drag the slider to position the
+    animation at any intermediate point.  After the first play, the animation
+    control fades out to become less obtrusive when the mouse is not over it;
+    reappearing when you move the mouse over it.  (If there is an animation
+    on both pages, hitting the Tab key successively will toggle which one
+    the Spacebar controls; the other will fade.)
+  </p>
+</div>
 <div class="page">
   <h2>Second section - page 4</h2>
   <p>More content, which really ought to be a complete paragraph.  However,
@@ -81,7 +99,7 @@
 
   <div class="even-page"><div class="page-wrap">
     <!-- even pages (left or top) reparented here from non-current-pages -->
-    <div class="animation-control hidden">
+    <div class="animation-control">
       <div class="play-pause">
         <i class="fas fa-play fa-2x fa-fw"></i>
       </div>
@@ -92,7 +110,7 @@
   </div></div>
   <div class="odd-page"><div class="page-wrap">
     <!-- odd pages (right or bottom) reparented here from non-current-pages -->
-    <div class="animation-control hidden">
+    <div class="animation-control">
       <div class="play-pause">
         <i class="fas fa-play fa-2x fa-fw"></i>
       </div>

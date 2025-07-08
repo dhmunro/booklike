@@ -34,22 +34,32 @@ class PageManager {
     this.bkwd = document.getElementById("pg-backward");
     this.pagerIcons = this.landscape? ["right", "left"] : ["down", "up"];
     this.pagerIcons = this.pagerIcons.map(t => "fa-circle-" + t);
+    this.noTransitions = false;  // option to turn off page turn transitions
     this.checkPagers();
     this.anim = [document.querySelector(".even-page .animation-control"),
-                 document.querySelector(".odd-page .animation-control")];
+                 document.querySelector(".odd-page .animation-control")].map(
+                  el => new AnimationControl(el));
+    this.animations = [];
+    for (let i = 0; i < pages.length; i++) {
+      if (pages[i].classList.contains("animation")) {
+        this.animations.push(i);
+        pages[i]._anim_ctrl_ = this.anim[i & 1];
+      }
+    }
+    const ctl = document.getElementById("pg-control");
+    this.pgctl = new SimpleSlider(ctl, ctl.lastElementChild,
+                                  0.75, this.rem, true, (frac) => {
+      const len = this.pairs.length;
+      let p = parseInt(frac * len);
+      if (p < 0) p = 0;
+      else if (p >= len) p = len - 1;
+      this.goTo(p, true);
+    });
     // Insert initial pages in their page-wrap before the animation-control:
     for (let i = 0 ; i < 2 ; i++) {
-      this.anim[i].before(this.pairs[this.current][i]);
+      this.anim[i].control.before(this.pairs[this.current][i]);
     }
-    // get dms = duration of page turning transitions
-    this.dms = (p => {
-      const dt = getComputedStyle(pages[0]).getPropertyValue(p);
-      let dms = parseFloat(dt);
-      if (dt.slice(-2) != "ms") {  // But dt always in units of s?
-        dms *= 1000;
-      }
-      return dms;
-    })("transition-duration");
+    this.setupAnimations(this.pairs[this.current]);
     this.pagerCancel = this.pagerCancel.bind(this);
     this.pagerTrigger = this.pagerTrigger.bind(this);
     this.frwd.addEventListener("pointerdown",
@@ -73,7 +83,33 @@ class PageManager {
         this.change(1);
         break;
       case " ":
-        animationControl.playPause();
+        if (this.liveAnimators & 1) {
+          this.anim[0].flash();
+          this.anim[0].playPause();
+        } else if (this.liveAnimators & 2) {
+          this.anim[1].flash();
+          this.anim[1].playPause();
+        }
+        break;
+      case "Tab":
+        if (this.liveAnimators) {
+          // If both pages have animators, toggle 1 bit
+          const both = this.liveAnimators & 4;
+          if (both) this.liveAnimators ^= 1;
+          if (this.liveAnimators & 1) {
+            this.anim[0].control.classList.remove("fade");
+            if (both) {
+              this.anim[1].stop();
+              this.anim[1].control.classList.add("fade");
+            }
+          } else if (this.liveAnimators & 2) {
+            this.anim[1].control.classList.remove("fade");
+            if (both) {
+              this.anim[0].stop();
+              this.anim[0].control.classList.add("fade");
+            }
+          }
+        }
         break;
       default:
         return;
@@ -95,14 +131,17 @@ class PageManager {
       }
     });
     this.observe_resize(document.body, (w, h) => {
-      this.rem = parseFloat(
+      const rem = parseFloat(
         getComputedStyle(document.documentElement).fontSize);
+      this.rem = rem;
       this.landscape = getComputedStyle(
           document.body).getPropertyValue("--orientation") == "landscape";
       this.pagerIcons = this.landscape? ["right", "left"] : ["down", "up"];
       this.pagerIcons = this.pagerIcons.map(t => "fa-circle-" + t);
       this.checkPagers(this.current, this.beating);
-      this.pgctl.onResize();
+      this.pgctl.onResize(rem);
+      this.anim[0].slider.onResize(rem);
+      this.anim[1].slider.onResize(rem);
     });
     /* Pulse info button if starting on page 0. */
     this.beating = false;
@@ -125,6 +164,10 @@ class PageManager {
     this.cur.value = "" + number;
   }
 
+  get pageFrac() {
+    return (this.current + 0.5) / this.pairs.length;
+  }
+
   observe_resize(element, callback) {
     this._observer.observe(element);
     element._resize_callback_ = callback;
@@ -142,7 +185,7 @@ class PageManager {
       const timeout = setTimeout(() => {
         if (this._pager_info_ === undefined) return;
         this._pager_info_[0] = null;
-        this.pgctl.activate();  // show page slider
+        this.pgctl.activate(this.pageFrac);  // show page slider
       }, 1000);
       this._pager_info_ = [timeout, el, delta];
     }
@@ -185,21 +228,19 @@ class PageManager {
       if (cur == 0) this.showInfo();
       return;
     }
-    for (let el of this.anim) {
-      el.classList.add("hidden");
-    }
+    for (let a of this.anim) a.control.classList.remove("fade");
     const [old_pair, new_pair] = [this.pairs[cur], this.pairs[nxt]];
-    if (noTransition) {
+    if (noTransition || this.noTransitions) {
       for (let i = 0 ; i < 2 ; i++) {
         old_pair[i].before(new_pair[i]);
         new_pair[i].parentElement.removeChild(old_pair[i]);
         old_pair[i].classList.remove("easein", "easeout", "midturn");
         new_pair[i].classList.remove("easein", "easeout", "midturn");
       }
+      this.setupAnimations(new_pair);
     } else {
-      for (let el of [this.frwd, this.bkwd]) {
-        el.style.display = "none";
-      }
+      for (let a of this.anim) a.control.classList.add("hidden");
+      for (let el of [this.frwd, this.bkwd]) el.style.display = "none";
       const [i, j] = nxt>cur? [1, 0] : [0, 1];
       const startListening = (el, callback) => {
         el.addEventListener("transitionend", callback);
@@ -214,9 +255,9 @@ class PageManager {
         stopListening(new_pair[j], cleanup);
         new_pair[j].classList.remove("easeout");
         new_pair[j].parentElement.removeChild(old_pair[j]);
-        for (let el of [this.frwd, this.bkwd]) {
-          el.style.display = "grid";
-        }
+        for (let a of this.anim) a.control.classList.remove("hidden");
+        for (let el of [this.frwd, this.bkwd]) el.style.display = "grid";
+        this.setupAnimations(new_pair);
       }
       const halfway = () => {
         /* Clean up after first half. */
@@ -261,6 +302,36 @@ class PageManager {
     clist.add((p <= 0)? allIcons[4] : icons[1]);
   }
 
+  * animatedPages() {
+    // for (let [i, page] of manager.animatedPages()) {...}
+    for (let i of this.animations) {
+      yield [i, this.pairs[i >> 1][i & 1]];
+    }
+  }
+
+  setAnimationCallback(page, ms, callback, context) {
+    page._anim_ms_ = ms;  // duration
+    page._anim_callback_ = callback;
+    page._anim_ctx_ = context;
+    page._anim_frac_ = 0;
+    const pair = this.pairs[this.current];
+    if (page == pair[0] || page == pair[1]) this.setupAnimations(pair);
+  }
+
+  setupAnimations(pair) {
+    let flags = 0;
+    for (let i of [0, 1]) {
+      const page = pair[i];
+      const callback = page._anim_callback_;
+      if (callback) {
+        page._anim_ctrl_.configure(page._anim_ms_, page._anim_frac_,
+                                   callback, page._anim_ctx_);
+        flags |= i + 1;
+      }
+    }
+    this.liveAnimators = (flags==3)? 7 : flags;
+  }
+
   showInfo() {
     if (this.beating) {
       this.bkwd.children[0].classList.remove("fa-bounce");
@@ -271,32 +342,34 @@ class PageManager {
 }
 
 class SimpleSlider {
-  constructor(control, thumb, margin, callback, context) {
+  constructor(control, thumb, margin, rem, hide, callback, context) {
     this.control = control;
     this.thumb = thumb;
     this.parent = thumb.parentElement
     this.margin = margin;  // in rem
-    this.moveThumb((manager.current + 0.5) / manager.pairs.length);
+    this.hide = hide;
     this.callback = callback;
     this.ctx = context;  // if callback bound to a this, context is ignored
     this.moving = false;
-    this.onResize();
+    this.onResize(rem);
     this.onDown = this.onDown.bind(this);
     this.onMove = this.onMove.bind(this);
     this.onUp = this.onUp.bind(this);
     this.thumb.addEventListener("pointerdown", this.onDown);
+    this.downAlert = undefined;
   }
 
-  onResize() {
+  onResize(rem) {
     const classList = this.control.classList;
+    const hidden = classList.contains("hidden");
     classList.remove("hidden");
     let {top, bottom, right, left} = this.thumb.getBoundingClientRect();
     let dthumb = [right - left, bottom - top];
     ({top, bottom, right, left} = this.parent.getBoundingClientRect());
-    classList.add("hidden");
+    if (hidden) classList.add("hidden");
     if (this.moving) this.onUp();
     const width = right - left, height = bottom - top;
-    const vertical = height > width, margin = this.margin*manager.rem;
+    const vertical = height > width, margin = this.margin*rem;
     this.vertical = vertical;
     if (vertical) {
       this.full = height - 2*margin - dthumb[1];
@@ -306,6 +379,10 @@ class SimpleSlider {
       this.zero = left + margin;
     }
     this.offset = 0;  // difference between thumb position and pointer
+  }
+
+  get frac() {
+    return getComputedStyle(this.control).getPropertyValue("--frac");
   }
 
   getFrac(x, y) {
@@ -325,17 +402,17 @@ class SimpleSlider {
     if (this.callback) this.callback.call(this.ctx, frac);
   }
 
-  activate() {
-    this.moveThumb((manager.current + 0.5) / manager.pairs.length);
+  activate(fraction) {
+    this.moveThumb(fraction);
     this.control.classList.remove("hidden");
   }
 
   onDown(e) {
     if (this.moving) return;
+    if (this.downAlert) this.downAlert();
     const {clientX, clientY} = e;
     const ptr = this.vertical? clientY : clientX;
-    const frac = getComputedStyle(this.control).getPropertyValue("--frac");
-    const now = frac*this.full + this.zero;
+    const now = this.frac*this.full + this.zero;
     this.offset = now - ptr;  // add to event position to get thumb position
     const thumb = this.thumb;
     thumb.addEventListener("pointermove", this.onMove);
@@ -361,21 +438,107 @@ class SimpleSlider {
     thumb.releasePointerCapture(this.pointerId);
     this.pointerId = undefined;
     this.moving = false;
-    this.control.classList.add("hidden");
+    if (this.hide) this.control.classList.add("hidden");
+  }
+
+  setAlert(callback) {
+    this.downAlert = callback;
+  }
+}
+
+class AnimationControl {
+  constructor(control) {
+    this.control = control;
+    this.play = control.children[0];
+    const slide = control.children[1];
+    const thumb = slide.children[1];
+    this.slider = new SimpleSlider(slide, thumb, 0, 0, false, (frac) => {
+      if (!this.callback) return;
+      this.callback.call(this.ctx, frac);
+    });
+    this.slider.setAlert(() => this.stop())
+    this.playPause = this.playPause.bind(this);
+    this.play.addEventListener("click", this.playPause);
+    this.begin = this.reqid = this.callback = this.ctx = null;
+    this.duration = 0;
+  }
+
+  configure(ms=0, frac0=0, callback=null, context=null) {
+    // This must be called whenever page turn changes the animated figure.
+    this.reset();
+    if (frac0 < 0) frac0 = 0;
+    else if (frac0 > 1) frac0 = 1;
+    const old_frac = this.slider.frac;
+    this.slider.moveThumb(frac0);
+    this.duration = (ms > 0)? ms : 0;
+    this.callback = callback;
+    this.ctx = context;
+    return old_frac;   // Option to save most recent position for each page?
+  }
+
+  reset(move=true) {
+    this.stop();
+    if (move) this.slider.moveThumb(0);
+    this.control.classList.remove("fade");
+  }
+
+  start() {
+    if (this.begin || !this.callback) return;
+    this.reqid = requestAnimationFrame((timestamp) => this.step(timestamp));
+    this.play.firstElementChild.classList.remove("fa-play");
+    this.play.firstElementChild.classList.add("fa-pause");
+    this.control.classList.add("fade");
+  }
+
+  step(timestamp) {
+    if (!this.callback) return;
+    if (!timestamp) return;  // impossible? or happens at most once
+    if (!this.begin) this.begin = timestamp - this.slider.frac*this.duration;
+    const elapsed = timestamp - this.begin;
+    if (elapsed < 0 || this.duration <= 0) return;
+    let frac = elapsed / this.duration;
+    if (frac >= 1.0) frac = 1.0;
+    this.slider.moveThumb(frac);  // draws frame as side effect
+    if (frac < 1) {
+      this.reqid = requestAnimationFrame((timestamp) => this.step(timestamp));
+    } else {
+      this.stop(true);
+    }
+  }
+
+  stop(nocancel=false) {
+    if (!nocancel && this.reqid) {
+      cancelAnimationFrame(this.reqid);
+      this.reqid = null;
+    }
+    this.begin = null;
+    this.play.firstElementChild.classList.remove("fa-pause");
+    this.play.firstElementChild.classList.add("fa-play");
+  }
+
+  playPause() {
+    if (this.begin !== null) {  /* pause playback */
+      this.stop();
+    } else if (this.slider.frac > 0.995) {  /* reset playback */
+      this.reset();
+    } else {  /* resume playback */
+      this.start();
+    }
+  }
+
+  flash() {
+    const classList = this.control.classList;
+    if (!classList.contains("fade")) return;
+    classList.remove("fade");
+    setTimeout(() => {
+      classList.add("fade");
+    }, 20);
   }
 }
 
 const manager = new PageManager();
-{
-  const ctl = document.getElementById("pg-control");
-  manager.pgctl = new SimpleSlider(ctl, ctl.lastElementChild, 0.75, (frac) => {
-    const len = manager.pairs.length;
-    let p = parseInt(frac * len);
-    if (p < 0) p = 0;
-    else if (p >= len) p = len - 1;
-    manager.goTo(p, true);
-  });
-  manager.pgctl.moveThumb((manager.current + 0.5) / manager.pairs.length);
-}
-
 window.manager = manager;
+
+for (let [i, page] of manager.animatedPages()) {
+  manager.setAnimationCallback(page, 5000, (frac) => {})
+}
