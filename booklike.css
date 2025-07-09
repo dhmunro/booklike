@@ -190,6 +190,7 @@ h2 {
   display: grid;
   grid: 1fr / 1fr;
   color: var(--dim_0);
+  cursor: pointer;
 }
 #pg-backward:hover, #pg-forward:hover {
   color: var(--fg_1);
@@ -238,6 +239,25 @@ h2 {
 }
 .pg-thumb:hover {
   background: var(--fg_1);
+}
+
+#info {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 30rem;
+  border-radius: 1rem;
+  padding: 2rem;
+  background: var(--bg_1);
+  color: var(--fg_1);
+  filter: drop-shadow(0.5rem 0.5rem 0.5rem)
+}
+#info .info-x {
+  position: absolute;
+  top: 0;
+  right: 0;
+  cursor: pointer;
 }
 
 @media (max-aspect-ratio: 1/1) {

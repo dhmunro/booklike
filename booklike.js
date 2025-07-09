@@ -3,8 +3,7 @@
    above the other for portrait or flipbook layouts.
  */
 
-import ThemeColors from "./ctheme.js"
-const theme = new ThemeColors()
+import ThemeColors from "./ctheme.js";
 /* // To change color theme:
  * const html = document.documentElement;
  * theme.change("selenized dark");
@@ -13,9 +12,14 @@ const theme = new ThemeColors()
 
 class PageManager {
   constructor() {
+    this.theme = new ThemeColors();
     this.rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
     this.landscape = getComputedStyle(
       document.body).getPropertyValue("--orientation") == "landscape";
+    this.cur = document.getElementById("currentPair");
+    this.themeDark = document.getElementById("theme-dark");
+    this.themeHigh = document.getElementById("theme-high");
+    this.info = document.getElementById("info");
     this.holder = document.querySelector(".page-holder");
     this.display = [document.querySelector(".even-page .page-wrap"),
                     document.querySelector(".odd-page .page-wrap")];
@@ -29,7 +33,7 @@ class PageManager {
     }
     this.pairs = pages.reduce((pairs, pg, i) =>
       (i&1? pairs[pairs.length-1].push(pg) : pairs.push([pg])) && pairs, []);
-    this.cur = document.getElementById("currentPair");
+    this.initialParameters();
     this.frwd = document.getElementById("pg-forward");
     this.bkwd = document.getElementById("pg-backward");
     this.pagerIcons = this.landscape? ["right", "left"] : ["down", "up"];
@@ -62,6 +66,7 @@ class PageManager {
     this.setupAnimations(this.pairs[this.current]);
     this.pagerCancel = this.pagerCancel.bind(this);
     this.pagerTrigger = this.pagerTrigger.bind(this);
+    this.info.firstElementChild.addEventListener("click", ()=>this.showInfo());
     this.frwd.addEventListener("pointerdown",
       () => this.pagerStart(this.frwd, 1));
     this.bkwd.addEventListener("pointerdown",
@@ -130,6 +135,9 @@ class PageManager {
         entry.target._resize_callback_(w, h);
       }
     });
+    this.resizers = [(rem) => this.pgctl.onResize(rem),
+                     (rem) => this.anim[0].onResize(rem),
+                     (rem) => this.anim[1].onResize(rem)];
     this.observe_resize(document.body, (w, h) => {
       const rem = parseFloat(
         getComputedStyle(document.documentElement).fontSize);
@@ -139,9 +147,7 @@ class PageManager {
       this.pagerIcons = this.landscape? ["right", "left"] : ["down", "up"];
       this.pagerIcons = this.pagerIcons.map(t => "fa-circle-" + t);
       this.checkPagers(this.current, this.beating);
-      this.pgctl.onResize(rem);
-      this.anim[0].onResize(rem);
-      this.anim[1].onResize(rem);
+      for (let resizer of this.resizers) resizer(rem);
     });
     /* Pulse info button if starting on page 0. */
     this.beating = false;
@@ -176,6 +182,11 @@ class PageManager {
   unobserve_resize(element) {
     this._observer.unobserve(element);
     element._resize_callback_ = undefined;
+  }
+
+  registerResizer(callback, context) {
+    if (context !== undefined) callback = callback.bind(context);
+    this.resizers.push(callback)
   }
 
   pagerStart(el, delta) {
@@ -337,7 +348,69 @@ class PageManager {
       this.bkwd.children[0].classList.remove("fa-bounce");
       this.beating = false;
     }
-    console.log("showInfo()");
+    this.info.classList.toggle("hidden");
+  }
+
+  initialParameters() {
+    // Interpret URL query parameters
+    // page=n           (to set initial page displayed, default is 0)
+    // date=yyyy-mm-dd  (to set base date, else uses current date)
+    let urlQueries = window.location.search.replace("\?", "");
+    if (urlQueries) {
+      urlQueries = Object.fromEntries(urlQueries.split("&")
+                                      .map(q => q.split("=")));
+    } else {
+      urlQueries = {}
+    }
+  
+    // Initial page from currentPair hidden input,
+    // unless specified in URL query, which overrides it.
+    const inputsValid = this.current >= 0;  // false means page being refreshed
+    if (!inputsValid) this.current = 0;
+    if (urlQueries.pp && !isNaN(urlQueries.pp)) {
+      this.current = urlQueries.pp;
+    }
+
+    let mode = this.theme.getCurrent()[1];  // from CSS or HTML
+    let dark = false, high = false;
+    // If theme is specified in URL query, that overrides everything:
+    if (urlQueries.theme) {
+      mode = urlQueries.theme;
+      if (mode == "black") {
+        dark = high = true;
+      } else if (mode == "dark") {
+        dark = true;
+      } else if (mode == "white") {
+        high = true;
+      }
+    } else {
+      if (inputsValid) {
+        dark = this.themeDark.checked;
+        high = this.themeHigh.checked;
+      } else if (mode == "black") {
+        dark = high = true;
+      } else if (mode == "dark") {
+        dark = true;
+      } else if (mode == "white") {
+        high = true;
+      }
+    }
+    this.themeDark.checked = dark;
+    this.themeHigh.checked = high;
+    this.setTheme();
+    this.themeDark.addEventListener("change", () => this.setTheme());
+    this.themeHigh.addEventListener("change", () => this.setTheme());
+  }
+  setTheme() {
+    const dark = this.themeDark.checked;
+    const high = this.themeHigh.checked;
+    let mode = "light";
+    if (dark) {
+      mode = high? "black" : "dark";
+    } else if (high) {
+      mode = "white";
+    }
+    this.theme.change(mode);
   }
 }
 

@@ -131,9 +131,42 @@
     <div class="pg-trough"></div><div class="pg-thumb"></div>
   </div>
 
+  <div id="info" class="hidden">
+    <div class="info-x"><i class="fas fa-circle-xmark fa-2x fa-fw"></i></div>
+    <p>Controls:<ul>
+      <li>Next page&ndash; <i class="fas fa-circle-right fa-fw"></i>
+        <i class="fas fa-circle-down fa-fw"></i> PgDn Enter
+      </li>
+      <li>Previous page&ndash; <i class="fas fa-circle-left fa-fw"></i>
+        <i class="fas fa-circle-up fa-fw"></i> PgUp Backspace
+      </li>
+      <li>Select page&ndash; press and hold
+        <i class="fas fa-circle-right fa-fw"></i>
+        <i class="fas fa-circle-left fa-fw"></i>
+        <i class="fas fa-circle-down fa-fw"></i>
+        <i class="fas fa-circle-up fa-fw"></i>
+        <ul><li>Drag slider to select page</li></ul>
+      </li>
+      <li>Go to first/last page&ndash; Home/End</li>
+      <li>Show info&ndash; <i class="fas fa-circle-info fa-fw"></i></li>
+      <li>Play/Pause&ndash;
+        <i class="fas fa-play fa-fw"></i>/<i class="fas fa-pause fa-fw"></i>
+        Spacebar
+        <ul><li>Select animation control: Tab</li></ul>
+      </li>
+      <ul><li>Drag slider to position animation</li></ul>
+    </ul></p>
+    <p>Options:<ul>
+      <li><input type="checkbox" id="theme-dark" name="theme-dark" />
+        <label for="theme-dark">Dark theme</label></li>
+      <li><input type="checkbox" id="theme-high" name="theme-high" />
+        <label for="theme-high">High contrast</label></li>
+    </ul></p>
+  </div>
+
 <!-- --------------------------------------------------------------------- -->
 <!-- Record current page pair here so refresh does not jump to beginning. -->
-<input type="hidden" name="currentPair" id="currentPair" value="0" />
+<input type="hidden" name="currentPair" id="currentPair" value="-1" />
 <!-- --------------------------------------------------------------------- -->
 
 <script type="module" src="./booklike.js"></script>

@@ -34,9 +34,9 @@ class ThemeColors {
         const modes = ["light", "dark", "white", "black"];
         let scheme, mode;
         for (const v of to.split(/\s+/)) {
-            if (scheme === undefined && schemes.some(v => v==x)) {
+            if (scheme === undefined && schemes.some(x => v==x)) {
                 scheme = v;
-            } else if (mode === undefined && modes.some(v => v==x)) {
+            } else if (mode === undefined && modes.some(x => v==x)) {
                 mode = v;
             } else {
                 scheme = mode = undefined;
@@ -57,11 +57,27 @@ class ThemeColors {
                 scheme = "selenized";
             }
         } else if (mode === undefined) {
-            mode = "light";
+            if (clist.contains("dark")) mode = "dark";
+            else if (clist.contains("black")) mode = "black";
+            else if (clist.contains("white")) mode = "white";
+            else mode = "light";
         }
         clist.remove(...schemes, ...modes);
         clist.add(scheme, mode);
         this.update();
+    }
+
+    getCurrent() {
+        let scheme = "selenized", mode = "light";
+        const clist = document.documentElement.classList;
+        if (clist.contains("dark")) mode = "dark";
+        else if (clist.contains("black")) mode = "black";
+        else if (clist.contains("white")) mode = "white";
+        else mode = "light";
+        if (clist.contains("solarized") && mode!="white" && mode!="black") {
+            scheme = "solarized";
+        }
+        return [scheme, mode];
     }
 
     get bg_0() { return this.colors.bg_0; }
