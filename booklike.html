@@ -87,15 +87,20 @@
   </p>
 </div>
 <div class="page">
-  <h2>Second section - page 4</h2>
-  <p>More content, which really ought to be a complete paragraph.  However,
-    I have nothing to say, so some incoherent rambling will have to
-    suffice for now, won't it?</p>
+  <h2>Javascript callbacks</h2>
+  <p>Animation pages require a javascript function in order to draw frames of
+    the animation.  After importing booklike.js, call window.manager.scripts()
+    with an object whose attribute names match the values of a "data-scripts"
+    attribute you put on the associated "page" div in your HTML file.  The
+    object values are themselves objects with up to three callback functions:
+    "initialize" called when a page becomes visible, "finalize" when a page is
+    about to be covered (just before the CSS transition that covers it), and
+    "frame" to draw an animation frame.
+  </p>
 </div>
 </div>
 
 <!-- --------------------------------------------------------------------- -->
-  <!-- nothing below should need to change -->
 
   <div class="even-page"><div class="page-wrap">
     <!-- even pages (left or top) reparented here from non-current-pages -->
@@ -162,13 +167,12 @@
       <li><input type="checkbox" id="theme-high" name="theme-high" />
         <label for="theme-high">High contrast</label></li>
     </ul></p>
+    <!-- Record current page pair here so refresh does not go to beginning. -->
+    <input type="hidden" name="currentPair" id="currentPair" value="-1" />
   </div>
 
 <!-- --------------------------------------------------------------------- -->
-<!-- Record current page pair here so refresh does not jump to beginning. -->
-<input type="hidden" name="currentPair" id="currentPair" value="-1" />
-<!-- --------------------------------------------------------------------- -->
 
-<script type="module" src="./booklike.js"></script>
+<script type="module" src="./main.js"></script>
 </body>
 </html>

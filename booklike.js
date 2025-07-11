@@ -1,6 +1,5 @@
-/* Make a web page resemble a simple book showing two pages at once.
-   The pages can be either side by side for landscape layouts, or one
-   above the other for portrait or flipbook layouts.
+/* Basic machinery for booklike.html template.
+   Import PagaeManager and create an instance to use.
  */
 
 import ThemeColors from "./ctheme.js";
@@ -43,12 +42,15 @@ class PageManager {
     this.anim = [document.querySelector(".even-page .animation-control"),
                  document.querySelector(".odd-page .animation-control")].map(
                   el => new AnimationControl(el));
+    this.scripted = {};
     this.animations = [];
     for (let i = 0; i < pages.length; i++) {
       if (pages[i].classList.contains("animation")) {
         this.animations.push(i);
         pages[i]._anim_ctrl_ = this.anim[i & 1];
       }
+      const scriptid = pages[i].dataset.scriptid
+      if (scriptid) this.scripted[scriptid] = pages[i];
     }
     const ctl = document.getElementById("pg-control");
     this.pgctl = new SimpleSlider(ctl, ctl.lastElementChild,
@@ -187,6 +189,21 @@ class PageManager {
   registerResizer(callback, context) {
     if (context !== undefined) callback = callback.bind(context);
     this.resizers.push(callback)
+  }
+
+  scripts(scriptDefinitions) {
+    const [page0, page1] = this.pairs[this.current];
+    for (let id in scriptDefinitions) {
+      const page = this.scripted[id];
+      if (page) {
+        // attach script definitions to associated page
+        page._scripts = scriptDefinitions[id];
+        if (page == page0 || page == page1) {
+          // if page is currently displayed, call its initialize method
+          page._scripts.initialize(page);
+        }
+      }
+    }
   }
 
   pagerStart(el, delta) {
@@ -617,9 +634,4 @@ class AnimationControl {
   }
 }
 
-const manager = new PageManager();
-window.manager = manager;
-
-for (let [i, page] of manager.animatedPages()) {
-  manager.setAnimationCallback(page, 5000, (frac) => {})
-}
+export default PageManager;
