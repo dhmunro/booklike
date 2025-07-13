@@ -47,10 +47,11 @@ class PageManager {
     for (let i = 0; i < pages.length; i++) {
       if (pages[i].classList.contains("animation")) {
         this.animations.push(i);
-        pages[i]._anim_ctrl_ = this.anim[i & 1];
+        pages[i]._anim_ctrl = this.anim[i & 1];
+        pages[i]._anim_frac = 0;
       }
-      const scriptid = pages[i].dataset.scriptid
-      if (scriptid) this.scripted[scriptid] = pages[i];
+      const actionid = pages[i].dataset.actionid
+      if (actionid) this.scripted[actionid] = pages[i];
     }
     const ctl = document.getElementById("pg-control");
     this.pgctl = new SimpleSlider(ctl, ctl.lastElementChild,
@@ -65,7 +66,6 @@ class PageManager {
     for (let i = 0 ; i < 2 ; i++) {
       this.anim[i].control.before(this.pairs[this.current][i]);
     }
-    this.setupAnimations(this.pairs[this.current]);
     this.pagerCancel = this.pagerCancel.bind(this);
     this.pagerTrigger = this.pagerTrigger.bind(this);
     this.info.firstElementChild.addEventListener("click", ()=>this.showInfo());
@@ -191,19 +191,24 @@ class PageManager {
     this.resizers.push(callback)
   }
 
-  scripts(scriptDefinitions) {
-    const [page0, page1] = this.pairs[this.current];
-    for (let id in scriptDefinitions) {
+  actions(pageActions) {
+    const pair = this.pairs[this.current];
+    const [page0, page1] = pair;
+    let call0 = false, call1 = false;
+    for (let id in pageActions) {
       const page = this.scripted[id];
       if (page) {
         // attach script definitions to associated page
-        page._scripts = scriptDefinitions[id];
-        if (page == page0 || page == page1) {
-          // if page is currently displayed, call its initialize method
-          page._scripts.initialize(page);
-        }
+        page._actions = pageActions[id];
+        // if page is displayed initially, call its show method.
+        if (page == page0) call0 = true;
+        else if (page == page1) call1 = true;
       }
     }
+    this.setupActions(pair);
+    // After this intial setupActions, call show if needed.
+    if (call0) page0._actions.show(page0);
+    if (call1) page1._actions.show(page1);
   }
 
   pagerStart(el, delta) {
@@ -260,16 +265,21 @@ class PageManager {
     const [old_pair, new_pair] = [this.pairs[cur], this.pairs[nxt]];
     if (noTransition || this.noTransitions) {
       for (let i = 0 ; i < 2 ; i++) {
-        old_pair[i].before(new_pair[i]);
-        new_pair[i].parentElement.removeChild(old_pair[i]);
-        old_pair[i].classList.remove("easein", "easeout", "midturn");
-        new_pair[i].classList.remove("easein", "easeout", "midturn");
+        const oldpg = old_pair[i], newpg = new_pair[i];
+        oldpg.before(newpg);
+        newpg.parentElement.removeChild(oldpg);
+        if (oldpg._actions) oldpg._actions.hide(oldpg);
+        if (newpg._actions) newpg._actions.show(newpg);
+        oldpg.classList.remove("easein", "easeout", "midturn");
+        newpg.classList.remove("easein", "easeout", "midturn");
       }
-      this.setupAnimations(new_pair);
+      this.setupActions(new_pair);
     } else {
       for (let a of this.anim) a.control.classList.add("hidden");
       for (let el of [this.frwd, this.bkwd]) el.style.display = "none";
       const [i, j] = nxt>cur? [1, 0] : [0, 1];
+      const oldi = old_pair[i], newi = new_pair[i];
+      const oldj = old_pair[j], newj = new_pair[j];
       const startListening = (el, callback) => {
         el.addEventListener("transitionend", callback);
         el.addEventListener("transitioncancel", callback);
@@ -280,32 +290,38 @@ class PageManager {
       }
       const cleanup = () => {
         /* Clean up after both even and odd have completed. */
-        stopListening(new_pair[j], cleanup);
-        new_pair[j].classList.remove("easeout");
-        new_pair[j].parentElement.removeChild(old_pair[j]);
+        stopListening(newj, cleanup);
+        newj.classList.remove("easeout");
+        newj.parentElement.removeChild(oldj);
+        if (oldj._actions) oldj._actions.hide(oldj);
         for (let a of this.anim) a.control.classList.remove("hidden");
         for (let el of [this.frwd, this.bkwd]) el.style.display = "grid";
-        this.setupAnimations(new_pair);
+        this.setupActions(new_pair);
       }
       const halfway = () => {
         /* Clean up after first half. */
-        stopListening(old_pair[i], halfway);
-        old_pair[i].classList.remove("easein", "midturn");
-        new_pair[i].parentElement.removeChild(old_pair[i]);
+        stopListening(oldi, halfway);
+        oldi.classList.remove("easein", "midturn");
+        newi.parentElement.removeChild(oldi);
+        if (oldi._actions) oldi._actions.hide(oldi);
         /* Second, new even(odd) page rotates to cover old even(odd) page. */
-        new_pair[j].classList.add("easeout", "midturn");
-        old_pair[j].after(new_pair[j]);
-        startListening(new_pair[j], cleanup);
+        newj.classList.add("easeout", "midturn");
+        oldj.after(newj);
+        if (oldj._actions) oldj._actions.standby(oldj);
+        if (newj._actions) newj._actions.show(newj);
+        startListening(newj, cleanup);
         setTimeout(() => {
-          new_pair[j].classList.remove("midturn");  // trigger rotation
+          newj.classList.remove("midturn");  // trigger rotation
         }, 0);
       }
       /* First, old odd(even) page rotates to reveal new odd(even) page. */
-      old_pair[i].classList.add("easein");
-      old_pair[i].before(new_pair[i]);
-      startListening(old_pair[i], halfway);
+      oldi.classList.add("easein");
+      oldi.before(newi);
+      if (oldi._actions) oldi._actions.standby(oldi);
+      if (newi._actions) newi._actions.show(newi);
+      startListening(oldi, halfway);
       setTimeout(() => {
-        old_pair[i].classList.add("midturn");  // trigger rotation
+        oldi.classList.add("midturn");  // trigger rotation
       }, 0);
     }
     this.checkPagers(nxt);
@@ -337,23 +353,12 @@ class PageManager {
     }
   }
 
-  setAnimationCallback(page, ms, callback, context) {
-    page._anim_ms_ = ms;  // duration
-    page._anim_callback_ = callback;
-    page._anim_ctx_ = context;
-    page._anim_frac_ = 0;
-    const pair = this.pairs[this.current];
-    if (page == pair[0] || page == pair[1]) this.setupAnimations(pair);
-  }
-
-  setupAnimations(pair) {
+  setupActions(pair) {
     let flags = 0;
     for (let i of [0, 1]) {
       const page = pair[i];
-      const callback = page._anim_callback_;
-      if (callback) {
-        page._anim_ctrl_.configure(page._anim_ms_, page._anim_frac_,
-                                   callback, page._anim_ctx_);
+      if (page._anim_ctrl) {
+        page._anim_ctrl.configure(page);
         flags |= i + 1;
       }
     }
@@ -543,27 +548,24 @@ class AnimationControl {
     const slide = control.children[1];
     const thumb = slide.children[1];
     this.slider = new SimpleSlider(slide, thumb, 0, 0, false, (frac) => {
-      if (!this.callback) return;
-      this.callback.call(this.ctx, frac);
+      this.page._anim_frac = frac;  // remember most recent frac
+      this.drawFrame(frac);
     });
     this.slider.setAlert(() => this.stop())
     this.playPause = this.playPause.bind(this);
     this.play.addEventListener("click", this.playPause);
-    this.begin = this.reqid = this.callback = this.ctx = null;
+    this.begin = this.reqid = this.drawFrame = null;
     this.duration = 0;
   }
 
-  configure(ms=0, frac0=0, callback=null, context=null) {
-    // This must be called whenever page turn changes the animated figure.
-    this.reset();
-    if (frac0 < 0) frac0 = 0;
-    else if (frac0 > 1) frac0 = 1;
-    const old_frac = this.slider.frac;
-    this.slider.moveThumb(frac0);
-    this.duration = (ms > 0)? ms : 0;
-    this.callback = callback;
-    this.ctx = context;
-    return old_frac;   // Option to save most recent position for each page?
+  configure(page) {
+    // Must be called whenever page turn changes the animated figure.
+    this.page = page;
+    const actions = page._actions;  // data-actionid required on animation page
+    this.duration = actions.ms;
+    this.drawFrame = actions.drawFrame;
+    this.reset(false);
+    this.slider.moveThumb(page._anim_frac || 0);
   }
 
   reset(move=true) {
@@ -573,7 +575,7 @@ class AnimationControl {
   }
 
   start() {
-    if (this.begin || !this.callback) return;
+    if (this.begin || !this.drawFrame) return;
     this.reqid = requestAnimationFrame((timestamp) => this.step(timestamp));
     this.play.firstElementChild.classList.remove("fa-play");
     this.play.firstElementChild.classList.add("fa-pause");
@@ -581,7 +583,7 @@ class AnimationControl {
   }
 
   step(timestamp) {
-    if (!this.callback) return;
+    if (!this.drawFrame) return;
     if (!timestamp) return;  // impossible? or happens at most once
     if (!this.begin) this.begin = timestamp - this.slider.frac*this.duration;
     const elapsed = timestamp - this.begin;
@@ -634,4 +636,49 @@ class AnimationControl {
   }
 }
 
-export default PageManager;
+class PageActions {  // A base class providing no-op default methods.
+  constructor(msDuration) {
+    if (msDuration.length) {
+      /* If an animation has several parts, can code drawFrame like this:
+       *   this.multipart(frac,
+       *     (frac) => {drawPart1(frac);},
+       *     (frac) => {drawPart2(frac);},
+       *     ...
+       *     (frac) => {drawPartN(frac);});
+       */
+      const total = msDuration.reduce((prev, x) => prev + x, 0);
+      this.fracs = msDuration.reduce((prev, x) => prev.push(x/total), []);
+      this.ms = total;
+    } else {
+      this.ms = msDuration;
+    }
+  }
+
+  // No-op default methods:
+  show(page) {}  // When page fully visible after turning transistion.
+  hide(page) {}  // When page fully hidden after turning transistion.
+  standby(page) {}  // When page turning transition starts.
+  drawFrame(frac) {}  // Draw animation frame at frac (0 to 1).
+
+  // Animations may need current frac to initialize:
+  fraction(page) {
+    return page._anim_frac;
+  }
+
+  // Multipart helper utility (see constructor):
+  multipart(frac, ...parts) {
+    const fracs = this.fracs;  // sum to 1 by construction
+    const pmax = fracs.length - 1;
+    if (frac <= 0.0) return parts[0](0.0);
+    if (frac >= 1.0) return parts[pmax](1.0);
+    let fmax = fracs[0];
+    for (let part = 0; part <= pmax; part++) {
+      if (frac <= fmax) return parts[part](frac/fmax);
+      if (part == pmax) return parts[pmax](1.0);  // 
+      frac -= fmax;
+      fmax = fracs[part + 1]
+    }
+  }
+}
+
+export {PageManager, PageActions};

@@ -8,12 +8,25 @@
   <meta charset="utf-8"/>
   <meta name="viewport"
     content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-  <!-- src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js" -->
-  <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.9.1/dist/pixi.min.js" integrity="sha384-yDBakdoFK/38OzWsBSrn4PfeusMXoYyVmepxgxiGH5FKBxHQvfG88nZjhhgiIfPs" crossorigin="anonymous"></script>
-  <!-- https://cdnjs.com/libraries/font-awesome -->
+  
+  <!-- stylesheets used in this file -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="ctheme.css"/>
   <link rel="stylesheet" href="booklike.css"/>
+
+  <!-- CDN import paths for optional bookpixi.js and bookthree.js -->
+  <script type="importmap">{
+    "imports": {
+      "pixi.js": "https://cdn.jsdelivr.net/npm/pixi.js@8.9.1/dist/pixi.min.js",
+      "three.js": "https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.tsl.min.js"
+    },
+    "integrity": {
+      "https://cdn.jsdelivr.net/npm/pixi.js@8.9.1/dist/pixi.min.js":
+        "sha384-yDBakdoFK/38OzWsBSrn4PfeusMXoYyVmepxgxiGH5FKBxHQvfG88nZjhhgiIfPs",
+      "https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.tsl.min.js":
+        "sha384-RLbgj6S2lo2jgaVU10x/Z6nrBweoHyio8AOFOK3l7flC3xfXNV9p6dERevoSfXBc"
+    }
+  }</script>
 </head>
 
 <body>
@@ -24,13 +37,10 @@
   Each page goes in a div with class "page".  A few additional classes
   are defined in booklike.css:
     title  - the title page for the book (always page 0)
-    figure - a full page figure, hopefully described on the facing page
-   The pages are displayed in pairs, an even page on the left (or top) and
+    animation - page containing animated content
+  The pages are displayed in pairs, an even page on the left (or top) and
   the following odd page on the right (or bottom).  Turning the page
   advances to the next or previous pair.
-   Figures drawn with pixi.js or three.js should not be on facing pages
-  (an even-odd page pair) because they can drive only a very small number
-  of HTML canvases portably (booklike assumes at least two).
 -->
 <div class="title page">
   <h1>Booklike Web Pages</h1>
@@ -67,12 +77,11 @@
     a local browser while you work on them.
   </p>
 </div>
-<div class="animation page">
+<div class="animation page" data-actionid="page3">
   <h2>Animation support</h2>
   <p>By giving a "page" div an additional "animation" class, you can activate
     a simple animation control on that page, as shown at the bottom of this
-    page &mdash; even though there is nothing to animate in this content!
-    To use this feature, you must supply your own javascript module which
+    page.  To use this feature, you must supply your own javascript module which
     connects to this animation control on any pages you animate.
   </p>
   <p>You can click on the play/pause button to start/stop the animation.
@@ -89,18 +98,24 @@
 <div class="page">
   <h2>Javascript callbacks</h2>
   <p>Animation pages require a javascript function in order to draw frames of
-    the animation.  After importing booklike.js, call window.manager.scripts()
-    with an object whose attribute names match the values of a "data-scripts"
-    attribute you put on the associated "page" div in your HTML file.  The
-    object values are themselves objects with up to three callback functions:
-    "initialize" called when a page becomes visible, "finalize" when a page is
-    about to be covered (just before the CSS transition that covers it), and
-    "frame" to draw an animation frame.
+    the animation.  Other pages might also require notifications when they
+    change visibility on page changes.  On the "page" div of any such page,
+    put a "data-actionid" attribute.  Use this "actionid" to associate
+    your javascript animation methods with that page:</p>
+  <ul>
+    <li>show(page) - called when page is visible and active</li>
+    <li>hide(page) - called when page is no longer visible</li>
+    <li>standby(page) - called when page is being hidden during turning</li>
+    <li>drawFrame(frac) - called for animation pages</li>
+  </ul>
+  <p>The page argument is the HTML element with class "page" and the
+    corresponding "actionid".  See main.js for an simple example.
   </p>
 </div>
 </div>
 
 <!-- --------------------------------------------------------------------- -->
+<!-- You shouldn't need to modify this section.  Skip to end of body. -->
 
   <div class="even-page"><div class="page-wrap">
     <!-- even pages (left or top) reparented here from non-current-pages -->
@@ -172,6 +187,9 @@
   </div>
 
 <!-- --------------------------------------------------------------------- -->
+<!-- Your main.js must import booklike.js.  If you have no javascript, change
+     main.js to booklike.js here.
+  -->
 
 <script type="module" src="./main.js"></script>
 </body>
